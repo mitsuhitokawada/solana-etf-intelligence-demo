@@ -3,6 +3,7 @@
 
 
 - ▶ **Try it:** https://mitsuhitokawada.github.io/solana-etf-intelligence-demo/
+- 🎬 **Demo video:** https://mitsuhitokawada.github.io/solana-etf-intelligence-demo/demo.mp4
 
 ## About
 

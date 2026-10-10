@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solana ETF Intelligence</title>
+<style>
+:root{
+  --bg:#0d0b1e;--bg2:#1a1240;--card:#141134;--card2:#1c1848;--line:#2d2766;
+  --text:#ece8ff;--mut:#a79ddb;--pur:#9945ff;--grn:#14f195;--red:#ff5c7a;--warn:#ffe98a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(1200px 600px at 80% -10%,#2a1a6b55,transparent),linear-gradient(160deg,var(--bg),var(--bg2) 120%);
+  background-attachment:fixed;min-height:100vh;color:var(--text);
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;line-height:1.5;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--grn);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:14px 14px 28px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;flex:1 1 220px;min-width:0}
+.brand svg{flex:none}
+h1{margin:0;font-size:18px;line-height:1.2;letter-spacing:.2px;background:linear-gradient(90deg,#b98bff,var(--grn));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{font-size:11px;color:var(--mut);margin-top:2px}
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--warn);background:#3a2f00;border:1px solid #6b5a10;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
+.lang button{background:none;border:0;padding:6px 12px;font-size:12px;color:var(--mut)}
+.lang button[aria-pressed="true"]{background:var(--pur);color:#fff;font-weight:700}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}
+.bar .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
+.tabs{display:inline-flex;gap:6px}
+.tabs button{background:var(--card2);border:1px solid var(--line);padding:7px 18px;border-radius:999px;font-family:var(--mono);font-size:13px;color:var(--mut);transition:.15s}
+.tabs button:hover{border-color:var(--pur);color:var(--text)}
+.tabs button[aria-selected="true"]{background:linear-gradient(90deg,var(--pur),#6d4bff);border-color:transparent;color:#fff;font-weight:700}
+.bar .right{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mut)}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--grn);margin-right:6px;box-shadow:0 0 8px var(--grn)}
+.grid{display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"flow" "price" "chain" "ai"}
+.flow{grid-area:flow}.price{grid-area:price}.chain{grid-area:chain}.ai{grid-area:ai}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr;grid-template-areas:"flow flow" "price chain" "ai ai"}}
+@media(min-width:980px){.grid{grid-template-columns:1.5fr 1fr 1fr;grid-template-areas:"flow price chain" "flow ai chain"}}
+.card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.card.hero{border-color:#14f19544;box-shadow:0 0 0 1px #14f19511,0 10px 40px -20px #14f195}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ct{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.big{font-family:var(--mono);font-weight:700;font-size:clamp(36px,9vw,52px);line-height:1.1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.pos{color:var(--grn)}.neg{color:var(--red)}
+.sub{font-size:12px;color:var(--mut)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.chartbox{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+svg.chart{width:100%;height:auto;display:block;touch-action:manipulation;border-radius:6px}
+svg.chart:focus-visible{outline:2px solid var(--grn)}
+.readout{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:12px;margin-top:6px;min-height:20px}
+.readout .hint{color:var(--mut);font-family:inherit;font-size:11px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+@media(min-width:420px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#0d0b1e66}
+.kpi .k{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px}
+.kpi .v{font-family:var(--mono);font-size:14px;margin-top:2px;font-weight:700}
+.pricebig{font-family:var(--mono);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.hl{display:flex;gap:14px;font-size:11px;color:var(--mut);margin-top:8px;font-family:var(--mono)}
+.hl b{color:var(--text)}
+.metric{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.metric:first-of-type{border-top:0}
+.metric .n{font-size:12px;color:var(--mut)}
+.metric .val{font-family:var(--mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.metric .d{font-family:var(--mono);font-size:12px}
+.metric svg{width:96px;height:36px;flex:none}
+.insight{border-color:#14f19555}
+.insight .ih{color:var(--grn);font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.insight ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}
+.insight li{font-size:14px;line-height:1.65;color:#e6e0ff;padding-left:16px;position:relative}
+.insight li::before{content:"";position:absolute;left:0;top:.7em;width:6px;height:6px;border-radius:50%;background:var(--pur)}
+.note{font-size:11px;color:#9186cc;margin-top:12px}
+.demo-banner{display:flex;align-items:center;gap:10px;margin-top:12px;padding:8px 12px;border:1px dashed #6b5a10;background:#2a2200;border-radius:8px;font-size:12px;color:var(--warn)}
+.demo-banner span:last-child{line-height:1.5}
+.meta{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:11px;color:var(--mut);display:grid;gap:3px}
+.meta .sample{color:var(--warn);font-weight:700}
+.meta b{color:var(--text);font-family:var(--mono);font-weight:600}
+.fade{animation:fade .35s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleY(.05);opacity:.3}to{transform:none;opacity:1}}
+.bars rect.b{transform-box:fill-box;transform-origin:center;animation:grow .45s ease both}
+footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--mut);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9945ff"/><stop offset="1" stop-color="#14f195"/></linearGradient></defs><rect width="34" height="34" rx="8" fill="#141134" stroke="#2d2766"/><path d="M8 11h16l-3 3H8zM8 16h16l-3 3H8zM11 21h16l-3 3H11z" fill="url(#lg)" transform="translate(-1 -1)"/></svg>
+      <div><h1>Solana ETF Intelligence</h1><div class="tag" data-i18n="tagline"></div></div>
+    </div>
+    <span class="badge" data-demo="demo-badge">DEMO DATA</span>
+    <div class="lang" data-demo="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="ja" data-demo="lang-ja" aria-pressed="false">日本語</button>
+      <button type="button" data-lang="en" data-demo="lang-en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <div class="demo-banner" data-demo="demo-banner" role="note"><span class="badge">DEMO DATA</span><span data-i18n="bannerText"></span></div>
+
+  <div class="bar">
+    <span class="lbl" data-i18n="period"></span>
+    <div class="tabs" role="tablist" data-i18n-aria="periodAria" data-demo="period-tabs">
+      <button type="button" role="tab" data-days="7" data-demo="period-7d"></button>
+      <button type="button" role="tab" data-days="30" data-demo="period-30d"></button>
+      <button type="button" role="tab" data-days="90" data-demo="period-90d"></button>
+    </div>
+    <span class="right"><span class="live"></span><span id="range"></span></span>
+  </div>
+
+  <main class="grid">
+    <section class="card hero flow" aria-labelledby="flowT">
+      <div class="ch"><span class="ct" id="flowT" data-i18n="flowTitle"></span><span class="badge">DEMO DATA</span></div>
+      <div class="sub" id="flowLbl"></div>
+      <div class="big pos" id="flowTotal" data-demo="flow-total">—</div>
+      <div class="sub" id="flowSub"></div>
+      <div class="chartbox" data-demo="flow-chart">
+        <div class="sub" data-i18n="dailyFlow" style="margin-bottom:6px"></div>
+        <svg class="chart" id="barSvg" viewBox="0 0 640 220" tabindex="0" role="img" data-i18n-aria="barAria"></svg>
+        <div class="readout" data-demo="flow-readout"><span id="roDate"></span><span id="roVal"></span></div>
+        <div class="readout"><span class="hint" data-i18n="barHint"></span></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+
+    <section class="card price" aria-labelledby="pxT" data-demo="price-card">
+      <div class="ch"><span class="ct" id="pxT" data-i18n="priceTitle"></span><span class="badge">DEMO DATA</span></div>
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <span class="pricebig" id="pxNow">—</span><span class="mono" id="pxChg"></span>
+      </div>
+      <svg class="chart" id="pxSvg" viewBox="0 0 640 180" role="img" data-i18n-aria="priceAria" data-demo="price-chart" style="margin-top:8px"></svg>
+      <div class="hl"><span><span data-i18n="high"></span> <b id="pxHi"></b></span><span><span data-i18n="low"></span> <b id="pxLo"></b></span></div>
+      <div class="meta" data-demo="price-source">
+        <div class="sample" data-i18n="priceSample"></div>
+        <div><span data-i18n="srcLabel"></span>: <b data-i18n="srcVal"></b></div>
+        <div><span data-i18n="genLabel"></span>: <b id="genAt"></b></div>
+      </div>
+    </section>
+
+    <section class="card chain" aria-labelledby="ocT">
+      <div class="ch"><span class="ct" id="ocT" data-i18n="chainTitle"></span><span class="badge">DEMO DATA</span></div>
+      <div id="metrics"></div>
+    </section>
+
+    <section class="card insight ai" aria-labelledby="aiT" data-demo="ai-insight">
+      <div class="ch"><span class="ih" id="aiT">✨ <span>AI Insight</span> · <span id="aiP" class="mono"></span></span><span class="badge">DEMO DATA</span></div>
+      <ul id="aiList"></ul>
+      <div class="note" data-i18n="aiNote"></div>
+    </section>
+  </main>
+
+  <footer><span class="badge">DEMO DATA</span><span data-i18n="disclaimer"></span></footer>
+</div>
+
+<script>
+const I18N = {
+  ja: {
+    title:"Solana ETF Intelligence｜米国SOL ETFダッシュボード",
+    tagline:"米国Solana ETFのフロー・価格・オンチェーンを1画面で",
+    period:"期間", periodAria:"期間の切り替え",
+    p7:"7日", p30:"30日", p90:"90日",
+    pl7:"7日", pl30:"30日", pl90:"90日",
+    flowTitle:"ETF 資金フロー",
+    netIn:"ETF 純流入（{p}）", netOut:"ETF 純流出（{p}）",
+    flowSub:"米国Solana現物ETF合計 · 単位: 米ドル",
+    dailyFlow:"日別フロー（百万ドル）",
+    barHint:"バーをタップ（矢印キーでも可）して日別の値を表示",
+    barAria:"ETF日別資金フローの棒グラフ",
+    kDays:"流入日数", kBest:"最大流入", kWorst:"最大流出", kAvg:"日平均",
+    priceTitle:"SOL 価格", priceAria:"SOL価格の推移グラフ", high:"高値", low:"安値",
+    chainTitle:"オンチェーン指標",
+    mAddr:"アクティブアドレス", mTx:"取引件数（日）", mDex:"DEX出来高（日）",
+    vsStart:"期間開始比",
+    aiNote:"※ デモデータに基づく自動生成の解説です。投資助言ではありません。",
+    disclaimer:"すべての数値はデモ用のサンプルです。実際の市場データではなく、投資助言ではありません。",
+    in1:"ETFへの純流入は{amt}で、{n}日中{d}日がプラス。",
+    out1:"ETFは{amt}の純流出。{n}日中プラスは{d}日のみ。",
+    pxUp:"SOL価格は{pct}上昇し、資金フローと{rel}。",
+    pxDn:"SOL価格は{pct}下落し、資金フローと{rel}。",
+    relSame:"連動", relDiff:"逆行",
+    ocUp:"アクティブアドレスは{pct}増加し、利用拡大を示唆。",
+    ocDn:"アクティブアドレスは{pct}減少し、利用の鈍化を示唆。",
+    days:"日",
+    bannerText:"この画面の数値はすべてデモ用のサンプルです。実際の市場データではありません。",
+    priceSample:"⚠ サンプル値・実データではありません",
+    srcLabel:"データ元", srcVal:"Demo generator（内部生成）",
+    genLabel:"生成日時"
+  },
+  en: {
+    title:"Solana ETF Intelligence | US SOL ETF Dashboard",
+    tagline:"US Solana ETF flows, price and on-chain data on one screen",
+    period:"Period", periodAria:"Select period",
+    p7:"7D", p30:"30D", p90:"90D",
+    pl7:"7D", pl30:"30D", pl90:"90D",
+    flowTitle:"ETF Flows",
+    netIn:"ETF Net Inflow · {p}", netOut:"ETF Net Outflow · {p}",
+    flowSub:"All US spot Solana ETFs combined · USD",
+    dailyFlow:"Daily flow ($M)",
+    barHint:"Tap a bar (or use arrow keys) to see a day's value",
+    barAria:"Bar chart of daily ETF flows",
+    kDays:"Inflow days", kBest:"Best day", kWorst:"Worst day", kAvg:"Daily avg",
+    priceTitle:"SOL Price", priceAria:"Line chart of SOL price", high:"High", low:"Low",
+    chainTitle:"On-chain",
+    mAddr:"Active addresses", mTx:"Transactions / day", mDex:"DEX volume / day",
+    vsStart:"vs period start",
+    aiNote:"Auto-generated from demo data. Not investment advice.",
+    disclaimer:"All figures are sample data for demo only. Not real market data and not investment advice.",
+    in1:"ETFs took in {amt} net, with {d} of {n} days positive.",
+    out1:"ETFs saw {amt} net outflow; only {d} of {n} days were positive.",
+    pxUp:"SOL rose {pct}, {rel}.",
+    pxDn:"SOL fell {pct}, {rel}.",
+    relSame:"in line with flows", relDiff:"against the flow",
+    ocUp:"Active addresses grew {pct}, hinting at wider usage.",
+    ocDn:"Active addresses fell {pct}, hinting at cooling usage.",
+    days:"d",
+    bannerText:"All numbers on this page are demo samples. They are not real market data.",
+    priceSample:"⚠ Sample value, not real data",
+    srcLabel:"Source", srcVal:"Demo generator (built in)",
+    genLabel:"Generated"
+  }
+};
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/* ---------- state & language ---------- */
+function startLang(){
+  try{ if(window.APP_LANG==="ja"||window.APP_LANG==="en") return window.APP_LANG; }catch(e){}
+  try{ const q=new URLSearchParams(location.search).get("lang"); if(q==="ja"||q==="en") return q; }catch(e){}
+  try{ const s=localStorage.getItem("lang"); if(s==="ja"||s==="en") return s; }catch(e){}
+  return "en";
+}
+const state={lang:startLang(),days:30,sel:null};
+const t=(k,p)=>{let s=(I18N[state.lang][k]??k);if(p)for(const x in p)s=s.split("{"+x+"}").join(p[x]);return s;};
+const $=id=>document.getElementById(id);
+
+/* ---------- deterministic demo data (90 days) ---------- */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const N=90, R=rng(20260);
+const END=Date.UTC(2026,4,30);
+const dates=[];for(let i=0;i<N;i++)dates.push(new Date(END-(N-1-i)*864e5));
+const flow=[];for(let i=0;i<N;i++){let v=2.5+5*Math.sin(i/5.5)+(i/N)*3+(R()-.5)*14;if(i>=N-3)v=Math.abs(v)+3;flow.push(Math.round(v*10)/10);}
+function walk(start,step,bias,last,lo){const a=[];let v=start;for(let i=0;i<N;i++){v+=(R()-bias)*step;if(v<lo)v=lo;a.push(v);}const k=last/a[N-1];return a.map(x=>x*k);}
+const price=walk(140,5,.47,172.4,60);
+const addr=walk(1.55,.06,.46,1.92,1);
+const txs=walk(33,1.6,.47,38.2,20);
+const dex=walk(1.8,.12,.47,2.4,.5);
+
+const GEN=new Date();
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const pctOf=a=>(a[a.length-1]-a[0])/a[0]*100;
+function money(m,sign){const s=m<0?"-":(sign?"+":"");const a=Math.abs(m);return a>=1000?s+"$"+(a/1000).toFixed(2)+"B":s+"$"+a.toFixed(1)+"M";}
+function dfmt(d){return state.lang==="ja"?(d.getUTCMonth()+1)+"/"+d.getUTCDate():MONTHS[d.getUTCMonth()]+" "+d.getUTCDate();}
+function dfull(d){return state.lang==="ja"?d.getUTCFullYear()+"/"+(d.getUTCMonth()+1)+"/"+d.getUTCDate():MONTHS[d.getUTCMonth()]+" "+d.getUTCDate()+", "+d.getUTCFullYear();}
+
+/* ---------- static i18n ---------- */
+function applyStatic(){
+  document.documentElement.lang=state.lang;
+  document.title=t("title");
+  document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent=t(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-aria]").forEach(e=>e.setAttribute("aria-label",t(e.dataset.i18nAria)));
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===state.lang)));
+  document.querySelectorAll(".tabs button").forEach(b=>{b.textContent=t("p"+b.dataset.days);b.setAttribute("aria-selected",String(+b.dataset.days===state.days));});
+}
+
+/* ---------- count-up ---------- */
+let shown=0,raf=0;
+function countTo(target){
+  const el=$("flowTotal");cancelAnimationFrame(raf);
+  const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const from=shown,t0=performance.now(),dur=450;
+  el.className="big mono "+(target>=0?"pos":"neg");
+  if(reduce){shown=target;el.textContent=money(target,true);return;}
+  (function step(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);shown=from+(target-from)*e;el.textContent=money(shown,true);if(p<1)raf=requestAnimationFrame(step);else{shown=target;el.textContent=money(target,true);}})(t0);
+}
+
+/* ---------- render ---------- */
+const W=640;
+function render(){
+  const n=state.days,off=N-n;
+  const f=flow.slice(off),p=price.slice(off),d=dates.slice(off);
+  const total=sum(f);
+  applyStatic();
+  $("range").textContent=dfull(d[0])+" – "+dfull(d[n-1]);
+  const pad=x=>String(x).padStart(2,"0");
+  $("genAt").textContent=GEN.getFullYear()+"-"+pad(GEN.getMonth()+1)+"-"+pad(GEN.getDate())+" "+pad(GEN.getHours())+":"+pad(GEN.getMinutes());
+  $("flowLbl").textContent=t(total>=0?"netIn":"netOut",{p:t("pl"+n)});
+  $("flowSub").textContent=t("flowSub");
+  countTo(total);
+
+  /* bars */
+  const mx=Math.max(0,...f),mn=Math.min(0,...f),H=220,top=12,bot=12,sc=(H-top-bot)/(mx-mn||1),y0=top+mx*sc,slot=W/n,bw=Math.max(2,slot*(n>30?.62:.66));
+  let s='<g class="bars">';
+  f.forEach((v,i)=>{const h=Math.max(1.5,Math.abs(v)*sc),x=i*slot+(slot-bw)/2,y=v>=0?y0-h:y0;
+    s+='<rect class="b" data-i="'+i+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1.5" fill="'+(v>=0?"#14f195":"#ff5c7a")+'" style="animation-delay:'+(i*(300/n)).toFixed(0)+'ms"/>';});
+  s+='</g><line x1="0" x2="'+W+'" y1="'+y0.toFixed(1)+'" y2="'+y0.toFixed(1)+'" stroke="#5b4fb3" stroke-width="1"/><rect id="selBox" y="0" width="'+slot.toFixed(1)+'" height="'+H+'" fill="#9945ff" opacity=".22" rx="2"/>';
+  $("barSvg").innerHTML=s;
+  state.sel=n-1;highlight();
+
+  /* kpis */
+  const best=Math.max(...f),worst=Math.min(...f),up=f.filter(v=>v>0).length;
+  const k=[[t("kDays"),up+"/"+n,""],[t("kBest"),money(best,true),"pos"],[t("kWorst"),money(worst,true),worst<0?"neg":"pos"],[t("kAvg"),money(total/n,true),total>=0?"pos":"neg"]];
+  $("kpis").innerHTML=k.map(x=>'<div class="kpi fade"><div class="k">'+x[0]+'</div><div class="v '+x[2]+'">'+x[1]+'</div></div>').join("");
+
+  /* price */
+  const pl=p[n-1],pc=pctOf(p),hi=Math.max(...p),lo=Math.min(...p),PH=180;
+  $("pxNow").textContent="$"+pl.toFixed(2);
+  const pe=$("pxChg");pe.textContent=(pc>=0?"▲ +":"▼ ")+pc.toFixed(1)+"%";pe.className="mono "+(pc>=0?"pos":"neg");
+  $("pxHi").textContent="$"+hi.toFixed(2);$("pxLo").textContent="$"+lo.toFixed(2);
+  const rg=(hi-lo)||1,pts=p.map((v,i)=>[(i/(n-1))*W,10+(1-(v-lo)/rg)*(PH-24)]);
+  const line=pts.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join(" ");
+  const col=pc>=0?"#9945ff":"#ff5c7a";
+  let g='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity=".45"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>';
+  for(let i=1;i<4;i++)g+='<line x1="0" x2="'+W+'" y1="'+(i*PH/4)+'" y2="'+(i*PH/4)+'" stroke="#2d2766" stroke-width="1" stroke-dasharray="3 5"/>';
+  g+='<path class="fade" d="'+line+' L'+W+' '+PH+' L0 '+PH+'Z" fill="url(#ag)"/><path class="fade" d="'+line+'" fill="none" stroke="'+(pc>=0?"#b98bff":"#ff5c7a")+'" stroke-width="2.5" stroke-linejoin="round"/><circle cx="'+pts[n-1][0]+'" cy="'+pts[n-1][1].toFixed(1)+'" r="5" fill="#14f195" stroke="#0d0b1e" stroke-width="2"/>';
+  $("pxSvg").innerHTML=g;
+
+  /* on-chain */
+  const defs=[["mAddr",addr,v=>v.toFixed(2)+"M"],["mTx",txs,v=>v.toFixed(1)+"M"],["mDex",dex,v=>"$"+v.toFixed(2)+"B"]],ids=["onchain-active","onchain-tx","onchain-dex"];
+  $("metrics").innerHTML=defs.map((m,j)=>{
+    const a=m[1].slice(off),c=pctOf(a),mi=Math.min(...a),ma=Math.max(...a),r=(ma-mi)||1;
+    const sp=a.map((v,i)=>(i?"L":"M")+((i/(n-1))*96).toFixed(1)+" "+(32-((v-mi)/r)*28).toFixed(1)).join(" ");
+    return '<div class="metric fade" data-demo="'+ids[j]+'"><div><div class="n">'+t(m[0])+'</div><div class="val">'+m[2](a[n-1])+'</div><div class="d '+(c>=0?"pos":"neg")+'">'+(c>=0?"▲ +":"▼ ")+c.toFixed(1)+'% <span class="sub">'+t("vsStart")+'</span></div></div><svg viewBox="0 0 96 36" aria-hidden="true"><path d="'+sp+'" fill="none" stroke="'+(c>=0?"#14f195":"#ff5c7a")+'" stroke-width="2" stroke-linejoin="round"/></svg></div>';
+  }).join("");
+
+  /* AI insight (3 lines, built from the same numbers) */
+  const ac=pctOf(addr.slice(off));
+  const l1=total>=0?t("in1",{amt:money(total,true),n:n,d:up}):t("out1",{amt:money(Math.abs(total),false),n:n,d:up});
+  const l2=t(pc>=0?"pxUp":"pxDn",{pct:Math.abs(pc).toFixed(1)+"%",rel:t((pc>=0)===(total>=0)?"relSame":"relDiff")});
+  const l3=t(ac>=0?"ocUp":"ocDn",{pct:Math.abs(ac).toFixed(1)+"%"});
+  $("aiP").textContent=t("pl"+n);
+  $("aiList").innerHTML=[l1,l2,l3].map((x,i)=>'<li class="fade" style="animation-delay:'+(i*90)+'ms">'+x+'</li>').join("");
+}
+
+function highlight(){
+  const n=state.days,i=state.sel,slot=W/n,off=N-n;
+  const box=$("selBox");if(box)box.setAttribute("x",(i*slot).toFixed(1));
+  const v=flow[off+i];
+  $("roDate").textContent=dfull(dates[off+i]);
+  const ro=$("roVal");ro.textContent=money(v,true);ro.className=v>=0?"pos":"neg";
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{state.days=+b.dataset.days;render();}));
+document.querySelectorAll(".lang button").forEach(b=>b.addEventListener("click",()=>{
+  state.lang=b.dataset.lang;try{localStorage.setItem("lang",state.lang);}catch(e){}
+  render();
+}));
+const svg=$("barSvg");
+function pick(e){const r=svg.getBoundingClientRect();const x=(e.clientX-r.left)/r.width;state.sel=Math.max(0,Math.min(state.days-1,Math.floor(x*state.days)));highlight();}
+svg.addEventListener("pointermove",pick);
+svg.addEventListener("click",pick);
+svg.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"){state.sel=Math.max(0,state.sel-1);highlight();e.preventDefault();}
+  if(e.key==="ArrowRight"){state.sel=Math.min(state.days-1,state.sel+1);highlight();e.preventDefault();}
+});
+render();
+</script>
+</body>
+</html>

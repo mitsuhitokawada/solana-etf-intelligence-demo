@@ -1,2 +1,19 @@
-# solana-etf-intelligence-demo
-Solana ETF Intelligence is an investor-focused dashboard for ETF fund flows, SOL prices, and on-chain metrics. This prototype uses simulated demo data only and is not connected to live market or blockchain data.
+# Solana ETF Intelligence
+
+
+
+- ▶ **Try it:** https://mitsuhitokawada.github.io/solana-etf-intelligence-demo/
+
+## About
+
+See the app and [IDEA.md](IDEA.md) (the idea log, in Japanese).
+
+## How it was made
+
+Built by shaping the idea together with AI (Claude) and publishing the AI-written code.
+The full conversation is in [IDEA.md](IDEA.md) (Japanese).
+
+## Files
+
+- `index.html` — the app (a single self-contained file)
+- `IDEA.md` — the idea log
